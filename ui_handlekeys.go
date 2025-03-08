@@ -92,6 +92,15 @@ func (MyUI *UI) HandleKeyViewMode(input string) string {
 		MyUI.Filter = ""
 		MyUI.UpdateContentFilterZone("")
 		MyUI.UpdateList()
+		
+	// Toggle filter mode (normal/negative)
+	case "n", "N":
+		if MyUI.Filter != "" {
+			MyUI.ToggleFilterMode()
+			MyUI.UpdateContentFilterZone(MyUI.Filter)
+		} else {
+			MyUI.Log("Set a filter first before toggling filter mode", "yellow", "clear")
+		}
 
 	// Delete VG
 	case "<C-d>":

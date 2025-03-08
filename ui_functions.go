@@ -163,11 +163,22 @@ func (MyUI *UI) UpdateList() {
 	}
 
 	for i := 0; i < len(GlobalVGList); i++ {
-
-		// We chack all VG fields
-		if MyUI.Filter == "" || MyUI.MatchFilters(GlobalVGList[i]) {
-
-			// We display the line if filter is ok
+		// Check if VG matches the filter criteria
+		matchesFilter := MyUI.Filter == "" || MyUI.MatchFilters(GlobalVGList[i])
+		
+		// Determine if the VG should be displayed based on normal or negative filter mode
+		shouldDisplay := false
+		
+		if MyUI.NegativeFilter {
+			// In negative filter mode, display VGs that don't match the filter
+			shouldDisplay = MyUI.Filter != "" && !matchesFilter
+		} else {
+			// In normal filter mode, display VGs that match the filter
+			shouldDisplay = matchesFilter
+		}
+		
+		if shouldDisplay {
+			// We display the line if our display logic is true
 			MyUI.List.Rows = append(MyUI.List.Rows, MyUI.DisplayLine(i))
 			DisplayedVGPairing = append(DisplayedVGPairing, i)
 		}
@@ -343,6 +354,17 @@ func (MyUI *UI) PutFilterInAllFields(filter string, i int) {
 	MyUI.AdvFilter.Categories[i], _ = regexp.Compile(clean_filter)
 }
 
+// Toggle the filter mode between normal and negative
+func (MyUI *UI) ToggleFilterMode() {
+	MyUI.NegativeFilter = !MyUI.NegativeFilter
+	if MyUI.NegativeFilter {
+		MyUI.Log("Filter mode: Showing VGs that DON'T match filter criteria", "yellow", "clear")
+	} else {
+		MyUI.Log("Filter mode: Showing VGs that match filter criteria", "yellow", "clear")
+	}
+	MyUI.UpdateList()
+}
+
 // Update Filterzone content
 func (MyUI *UI) UpdateContentFilterZone(value string) {
 
@@ -404,14 +426,20 @@ func (MyUI *UI) UpdateContentFilterZone(value string) {
 		}
 	}
 
+	// Filter mode indicator
+	filterModeText := ""
+	if MyUI.NegativeFilter {
+		filterModeText = " [NOT]"
+	}
+
 	// Update filter zone in the UI
 	if MyUI.Mode == "filter" {
-		MyUI.FilterZone.Text = fmt.Sprintf("Filter : [%-30s]%s", MyUI.Filter, background)
+		MyUI.FilterZone.Text = fmt.Sprintf("Filter%s: [%-30s]%s", filterModeText, MyUI.Filter, background)
 	} else {
 		if error {
-			MyUI.FilterZone.Text = fmt.Sprintf("Filter : [%-30s]%s", MyUI.Filter, background)
+			MyUI.FilterZone.Text = fmt.Sprintf("Filter%s: [%-30s]%s", filterModeText, MyUI.Filter, background)
 		} else {
-			MyUI.FilterZone.Text = fmt.Sprintf("Filter : [%-30s]%s", MyUI.Filter, ConstZonePassive)
+			MyUI.FilterZone.Text = fmt.Sprintf("Filter%s: [%-30s]%s", filterModeText, MyUI.Filter, ConstZonePassive)
 		}
 	}
 
@@ -438,9 +466,9 @@ func (MyUI *UI) DisplayPopup(content string, action bool) {
 	case "help":
 		// Action = True, I display the popup
 		if action {
-			MyUI.SetPopupSize("Help", 80, 27)
+			MyUI.SetPopupSize("Help", 80, 28)
 
-			MyUI.Popup.Text = "<Arrows>       : Move\n\nCtrl + A       : Select all items\n<Space> or S   : Select\nCtrl + <Space> : Clear selection\n\nF or /         : Filter\n                 You can specify fied (ex: Container:)\n                 | (or) and & (and) allowed\nCtrl + F       : Clear Filter\n\nD              : Change Display (uuid/name)\n\nO              : Change sort order\n\nU              : Update description\n\nCrtl + D       : Delete VG\n\nCrtl + R       : Refresh list\n\n\nEsc : Quit help"
+			MyUI.Popup.Text = "<Arrows>       : Move\n\nCtrl + A       : Select all items\n<Space> or S   : Select\nCtrl + <Space> : Clear selection\n\nF or /         : Filter\n                 You can specify fied (ex: Container:)\n                 | (or) and & (and) allowed\nN              : Toggle filter mode (show matching/non-matching VGs)\nCtrl + F       : Clear Filter\n\nD              : Change Display (uuid/name)\n\nO              : Change sort order\n\nU              : Update description\n\nCrtl + D       : Delete VG\n\nCrtl + R       : Refresh list\n\n\nEsc : Quit help"
 			MyUI.Mode = "help"
 
 		} else {

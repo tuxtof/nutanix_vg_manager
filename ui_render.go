@@ -54,6 +54,7 @@ type UI struct {
 	Order         string // asc | desc
 	TotalVG       int
 	UglyFix       bool
+	NegativeFilter bool  // true if filter is negated (show VGs that DON'T match)
 }
 
 // Create/initialize UI
@@ -62,6 +63,7 @@ func (MyUI *UI) Create() {
 	MyUI.Mode = "view"
 	MyUI.Order = "asc"
 	MyUI.SelectedItems = 0
+	MyUI.NegativeFilter = false
 
 	// Use a string that will match to nothing as intialization
 	tmp, _ := regexp.Compile("###")
